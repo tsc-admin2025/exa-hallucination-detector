@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     });
 
     const { object } = await generateObject({
-      model: anthropic('claude-3-7-sonnet-latest'),
+      model: anthropic('claude-sonnet-4-20250514'),
       schema: factCheckSchema,
       output: 'object',
       prompt: `You are an expert fact-checker. Given a claim and a set of sources, determine whether the claim is true or false based on the text from sources (or if there is insufficient information).

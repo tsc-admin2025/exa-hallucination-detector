@@ -142,28 +142,28 @@ export default function FactChecker() {
   
     try {
       const claims = await extractClaims(articleContent);
-      const finalResults = await Promise.all(
-        claims.map(async ({ claim, original_text }: Claim) => {
-          try {
-            const exaSources = await exaSearch(claim);
-            
-            if (!exaSources?.results?.length) {
-              return null;
-            }
-    
-            const sourceUrls = exaSources.results.map((result: { url: any; }) => result.url);
-            
-            const verifiedClaim = await verifyClaim(claim, original_text, exaSources.results);
-    
-            return { ...verifiedClaim, original_text, url_sources: sourceUrls };
-          } catch (error) {
-            console.error(`Failed to verify claim: ${claim}`, error);
-            return null;
+      const finalResults: any[] = [];
+
+      // Process claims sequentially to avoid rate limits
+      for (const { claim, original_text } of claims) {
+        try {
+          const exaSources = await exaSearch(claim);
+
+          if (!exaSources?.results?.length) {
+            continue;
           }
-        })
-      );
-  
-      setFactCheckResults(finalResults.filter(result => result !== null));
+
+          const sourceUrls = exaSources.results.map((result: { url: any; }) => result.url);
+
+          const verifiedClaim = await verifyClaim(claim, original_text, exaSources.results);
+
+          finalResults.push({ ...verifiedClaim, original_text, url_sources: sourceUrls });
+          // Update results progressively so user sees them appear
+          setFactCheckResults([...finalResults]);
+        } catch (error) {
+          console.error(`Failed to verify claim: ${claim}`, error);
+        }
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An unexpected error occurred.');
       setFactCheckResults([]);
